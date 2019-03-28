@@ -1,0 +1,58 @@
+- hosts: php
+  vars:
+    tl_dir: /server/tools
+    ap_dir: /application
+    an_conf: /etc/ansible/conf
+  tasks:
+    - name: mkdir -p {{ tl_dir }}/php
+      file: dest={{ tl_dir }}/php state=directory
+    - name: mkdir -p {{ ap_dir }}/php
+      file: dest={{ ap_dir }}/php state=directory
+    - name: yum install -y zlib-devel libxml2-devel libjpeg-devel libjpeg-turbo-devel libiconv-devel freetype-devel libpng-devel gd-devel libcurl-devel libxslt-devel libmcrypt-devel mhash mcrypt
+      yum: 
+       name:
+         - zlib-devel
+         - libxml2-devel
+         - libjpeg-devel
+         - freetype-devel
+         - libpng-devel
+         - gd-devel
+         - libcurl-devel
+         - libxslt-devel
+         - libmcrypt-devel
+         - mhash
+         - mcrypt
+    - name: rm -rf {{ tl_dir }}/php/*
+      shell: rm -rf {{ tl_dir }}/php/*
+    - name: rm -rf {{ ap_dir }}/php/*
+      shell: rm -rf {{ ap_dir }}/php/*
+    - name: scp -r {{ an_conf }}/php/* root@172.16.1.8:{{ tl_dir }}/php/
+      copy: src={{ an_conf }}/php/libiconv-1.14.tar.gz dest={{ tl_dir }}/php/
+    - name: scp -r {{ an_conf }}/php/* root@172.16.1.8:{{ tl_dir }}/php/
+      copy: src={{ an_conf }}/php/php-5.5.32.tar.gz dest={{ tl_dir }}/php/
+    - name: tar -xvf {{ tl_dir }}/php/libiconv-1.14.tar.gz
+      shell: chdir={{ tl_dir }}/php/ tar -xvf libiconv-1.14.tar.gz
+    - name: tar -xvf {{ tl_dir }}/php/php-5.5.32.tar.gz
+      shell: chdir={{ tl_dir }}/php/ tar -xvf php-5.5.32.tar.gz
+    - name: cd {{ tl_dir }}/php/libiconv-1.14 ./configure --prefix=/usr/local/libiconv
+      shell: chdir={{ tl_dir }}/php/libiconv-1.14 ./configure --prefix=/usr/local/libiconv
+    - name: make&&make install
+      shell: chdir={{ tl_dir }}/php/libiconv-1.14 make&&make install
+    - name: cd {{ tl_dir }}/php;tar -xvf php-5.5.32.tar.gz
+      shell: chdir={{ tl_dir }}/php tar -xvf php-5.5.32.tar.gz
+    - name: ./config
+      script: /etc/ansible/conf/php/config.sh
+    - name: ln -s /application/mysql/lib/libmysqlclient.so.18 /usr/lib64/
+      shell: ln -s {{ ap_dir }}/mysql/lib/libmysqlclient.so.18 /usr/lib64/
+    - name: cd {{tl_dir}}/php/php-5.5.32 touch ext/phar/phar.phar
+      shell: chdir={{tl_dir}}/php/php-5.5.32 touch ext/phar/phar.phar
+    - name: cd {{tl_dir}}/php/php-5.5.32  make&&make install
+      shell: chdir={{tl_dir}}/php/php-5.5.32 make&&make install
+    - name: ln -s /application/php/php-5.5.32/ /application/php/php
+      shell: ln -s /application/php/php-5.5.32/ /application/php/php
+    - name: chdir={{tl_dir}}/php/php-5.5.32 cp php.ini-production /application/php/php-5.5.32/lib/
+      shell: chdir={{tl_dir}}/php/php-5.5.32 cp php.ini-production /application/php/php-5.5.32/lib/
+    - name: cd /application/php/php/etc/ cp php-fpm.conf.default php-fpm.conf
+      shell: chdir={{ ap_dir }}/php/php/etc/ cp php-fpm.conf.default php-fpm.conf
+    - name: /application/php/php/sbin/php-fpm
+      shell: /application/php/php/sbin/php-fpm

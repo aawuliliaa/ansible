@@ -1,0 +1,9 @@
+- hosts: 172.16.1.51
+  tasks:
+    - name: copy sersync to 31
+      copy: src=/etc/ansible/conf/sersync/sersync dest=/usr/local/
+    - name: chmod 755 sersync
+#      shell: chmod 755 /usr/local/sersync/bin/sersync
+      file: dest=/usr/local/sersync/bin/sersync mode=755
+    - name: start sersync
+      shell: /usr/local/sersync/bin/sersync -dro /usr/local/sersync/conf/confxml.xml

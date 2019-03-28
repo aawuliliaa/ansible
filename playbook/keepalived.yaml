@@ -1,0 +1,4 @@
+- hosts: lb
+  tasks:
+    - name: yum install -y keepalived
+      yum: name=keepalived state=present

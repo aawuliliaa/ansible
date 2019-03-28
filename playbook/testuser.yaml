@@ -1,0 +1,4 @@
+- hosts: 172.16.1.41
+  tasks:
+    - name: step03:create rsync user
+      user: name=rsync01 state=present createhome=no shell=/sbin/nologin

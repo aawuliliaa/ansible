@@ -1,0 +1,10 @@
+- hosts: php
+  tasks:
+    - name: copy nginx.conf to .8
+      copy: src=/etc/ansible/conf/lnmp-conf/nginx.conf dest=/application/nginx/nginx/conf/nginx.conf
+    - name: copy to html
+      copy: src=/etc/ansible/conf/lnmp-conf/html/shop dest=/application/nginx/nginx/html/
+    - name: stop nginx
+      shell: /application/nginx/nginx/sbin/nginx -s stop
+    - name: start nginx
+      shell: /application/nginx/nginx/sbin/nginx

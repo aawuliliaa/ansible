@@ -1,0 +1,31 @@
+- hosts: 172.16.1.31
+  tasks: 
+    - name: step01:yum install rpcbind
+      yum: name=rpcbind state=installed
+    - name: step02:yum install nfs-utils
+      yum: name=nfs-utils state=installed
+    - name: exports file
+      copy: src=/etc/ansible/conf/nfsconf/exports dest=/etc/
+    - name: step03:mkdir /var/www/html chown -R oldboy.oldboy /var/www/html
+      file: dest=/var/www/html state=directory owner=oldboy group=oldboy
+    - name: step03:mkdir /app/logs chown -R oldboy.oldboy /app/logs
+      file: dest=/app/logs state=directory owner=oldboy group=oldboy
+    - name: step04:service rpcbind start
+      service: name=rpcbind state=started enabled=yes
+    - name: step05:service nfs start
+      service: name=nfs state=started enabled=yes
+- hosts: 172.16.1.7
+  tasks:
+    - name: step01:yum install rpcbind
+      yum: name=rpcbind state=installed
+    - name: step02:yum install nfs-utils
+      yum: name=nfs-utils state=installed
+    - name: mkdir -p /var/www/html
+      file: dest=/var/www/html state=directory owner=oldboy group=oldboy
+    - name: mkdir -p /app/logs
+      file: dest=/app/logs state=directory owner=oldboy group=oldboy
+    - name: mount -t nfs 172.16.1.31:/var/www/html /var/www/html
+      mount: src=172.16.1.31:/var/www/html path=/var/www/html fstype=nfs state=mounted
+    - name: mount -t nfs 172.16.1.31:/app/logs /app/logs
+      mount: src=172.16.1.31:/app/logs path=/app/logs fstype=nfs state=mounted
+

@@ -1,0 +1,24 @@
+- hosts: 172.16.1.11
+  tasks:
+    - name: yum install curl policycoreutils openssh-server openssh-clients policycoreutils-python –y
+      yum:
+       name:
+         - curl
+         - policycoreutils
+         - openssh-server
+         - openssh-clients
+         - policycoreutils-python
+    - name: mkdir -p /application/git
+      file: dest=/application/git state=directory
+    - name: rm -rf /application/git/*
+      shell: rm -rf /application/git/*
+    - name: scp -r /etc/ansible/conf/git/gitlab-ce-10.0.6-ce.0.el7.x86_64.rpm /application/git
+      copy: src=/etc/ansible/conf/git/gitlab-ce-10.0.6-ce.0.el7.x86_64.rpm dest=/application/git/
+    - name: rpm -ivh gitlab-ce-10.0.6-ce.0.el7.x86_64.rpm
+      shell: chdir=/application/git rpm -ivh gitlab-ce-10.0.6-ce.0.el7.x86_64.rpm
+    - name: scp -r /etc/ansible/conf/gitlab.rb /etc/gitlab/gitlab.rb
+      copy: src=/etc/ansible/conf/git/gitlab.rb dest=/etc/gitlab/gitlab.rb
+    - name: gitlab-ctl reconfigure
+      shell: gitlab-ctl reconfigure
+    - name: gitlab-ctl restart
+      shell: gitlab-ctl restart

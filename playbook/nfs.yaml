@@ -1,0 +1,22 @@
+- hosts: nfs-server
+  tasks: 
+    - name: step01:yum install rpcbind
+      yum: name=rpcbind state=installed
+    - name: step02:yum install nfs-utils
+      yum: name=nfs-utils state=installed
+    - name: exports file
+      copy: src=/etc/ansible/conf/nfsconf/exports dest=/etc/
+    - name: step03:mkdir /data chown -R nfsnobody.nfsnobody /data
+      file: dest=/data state=directory owner=nfsnobody group=nfsnobody
+    - name: step04:service rpcbind start
+      service: name=rpcbind state=started enabled=yes
+    - name: step05:service nfs start
+      service: name=nfs state=started enabled=yes
+- hosts: nfs-client
+  tasks:
+    - name: step01:yum install rpcbind
+      yum: name=rpcbind state=installed
+    - name: step02:yum install nfs-utils
+      yum: name=nfs-utils state=installed
+    - name: mount -t nfs 172.16.1.31:/data /mnt
+      mount: src=172.16.1.31:/data path=/mnt fstype=nfs state=mounted

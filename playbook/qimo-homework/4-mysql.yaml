@@ -1,0 +1,34 @@
+- hosts: db
+  vars:
+    tl_dir: /server/tools
+    ap_dir: /application
+    an_conf: /etc/ansible/conf
+  tasks:
+    - name: mkdir -p {{ tl_dir }}/mysql
+      file: dest={{ tl_dir }}/mysql state=directory
+    - name: rm -rf {{ tl_dir }}/mysql/*
+      shell: rm -rf {{ tl_dir }}/mysql/*
+    - name: rm -rf {{ ap_dir }}/*
+      shell: rm -rf {{ ap_dir }}/*
+    - name: scp -r {{ an_conf }}/mysql/mysql-5.6.34-linux-glibc2.5-x86_64.tar.gz root@172.16.1.51:{{ tl_dir }}/mysql/
+      copy: src={{ an_conf }}/mysql/mysql-5.6.34-linux-glibc2.5-x86_64.tar.gz dest={{ tl_dir }}/mysql/
+    - name: tar -xvf {{ tl_dir }}/mysql/mysql-5.6.34-linux-glibc2.5-x86_64.tar.gz
+      shell: chdir={{ tl_dir }}/mysql/ tar -xvf mysql-5.6.34-linux-glibc2.5-x86_64.tar.gz
+    - name: useradd mysql -M -s /sbin/nologin
+      user: name=mysql createhome=no shell=/sbin/nologin
+    - name: mv {{ tl_dir }}/mysql/mysql-5.6.34-linux-glibc2.5-x86_64 {{ ap_dir }}/mysql
+      shell: chdir={{ tl_dir }}/mysql/ mv mysql-5.6.34-linux-glibc2.5-x86_64 {{ ap_dir }}/mysql
+    - name: chown -R mysql.mysql /application/mysql/data/
+      shell: chown -R mysql.mysql {{ ap_dir }}/mysql/data
+    - name: init mysql:/application/mysql/scripts/mysql_install_db --basedir=/application/mysql --datadir=/application/mysql/data/ --user=mysql
+      shell: chdir={{ ap_dir }}/mysql/scripts/ ./mysql_install_db --basedir=/application/mysql --datadir=/application/mysql/data/ --user=mysql
+    - name: cp /application/mysql/support-files/mysql.server /etc/init.d/mysqld
+      shell: cp {{ ap_dir }}/mysql/support-files/mysql.server /etc/init.d/mysqld
+    - name: sed -ri 's#/usr/local#/application#g' /etc/init.d/mysqld /application/mysql/bin/mysqld_safe
+      shell: sed -ri 's#/usr/local#/application#g' /etc/init.d/mysqld {{ ap_dir }}/mysql/bin/mysqld_safe
+    - name: cp /application/mysql/support-files/my-default.cnf /etc/my.cnf
+      shell: cp {{ ap_dir }}/mysql/support-files/my-default.cnf /etc/my.cnf
+    - name: /etc/init.d/mysqld start
+      shell: /etc/init.d/mysqld start
+    - name: /application/mysql/bin/mysqladmin -uroot password "oldboy123"
+      shell: /application/mysql/bin/mysqladmin -uroot password "oldboy123"

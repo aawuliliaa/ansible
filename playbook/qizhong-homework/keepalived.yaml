@@ -1,0 +1,6 @@
+- hosts: lb
+  tasks:
+    - name: yum install -y keepalived
+      yum: name=keepalived state=present
+    - name: start keepalived
+      shell: /etc/init.d/keepalived start

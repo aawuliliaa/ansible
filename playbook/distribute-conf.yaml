@@ -1,0 +1,36 @@
+- hosts: lb
+  tasks:
+    - name: copy nginx.conf
+      copy: src=/etc/ansible/conf/keepalived/nginx.conf dest=/application/nginx/nginx/conf/nginx.conf
+    - name: copy check_web.sh
+      copy: src=/etc/ansible/conf/keepalived/check_web.sh dest=/server/scripts/check_web.sh
+    - name: stop nginx
+      shell: /application/nginx/nginx/sbin/nginx -s stop
+    - name: start nginx
+      shell: /application/nginx/nginx/sbin/nginx 
+- hosts: 172.16.1.5
+  tasks:
+    - name: copy keepalived.conf to 5
+      copy: src=/etc/ansible/conf/keepalived/keepalived-5.conf dest=/etc/keepalived/keepalived.conf
+    - name: restart keepalived
+      shell: /etc/init.d/keepalived restart
+- hosts: 172.16.1.6
+  tasks:
+    - name: copy keepalived.conf to 6
+      copy: src=/etc/ansible/conf/keepalived/keepalived-6.conf dest=/etc/keepalived/keepalived.conf
+    - name: restart keepalived
+      shell: /etc/init.d/keepalived restart
+- hosts: php
+  tasks:
+    - name: copy nginx.conf to .8
+      copy: src=/etc/ansible/conf/lnmp-conf/nginx.conf dest=/application/nginx/nginx/conf/nginx.conf
+    - name: copy to html
+      copy: src=/etc/ansible/conf/lnmp-conf/html/shop dest=/application/nginx/nginx/html/
+    - name: stop nginx
+      shell: /application/nginx/nginx/sbin/nginx -s stop
+    - name: start nginx
+      shell: /application/nginx/nginx/sbin/nginx 
+- hosts: lb
+  tasks:
+    - name: set iptables to 5&6
+      script: /etc/ansible/conf/keepalived/iptables.sh

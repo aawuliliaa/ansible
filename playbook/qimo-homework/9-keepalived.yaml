@@ -1,0 +1,59 @@
+- hosts: lb
+  tasks:
+    - name: yum install -y keepalived
+      yum: name=keepalived state=present
+    - name: copy check_web.sh
+      copy: src=/etc/ansible/conf/keepalived/check_web.sh dest=/server/scripts/check_web.sh
+
+- hosts: lb
+  vars:
+    tl_dir: /server/tools
+    ap_dir: /application
+    an_conf: /etc/ansible/conf
+  tasks:
+    - name: mkdir -p {{ tl_dir }}/nginx
+      file: dest={{ tl_dir }}/nginx state=directory
+    - name: mkdir -p {{ ap_dir }}/nginx
+      file: dest={{ ap_dir }}/nginx state=directory
+    - name: rm -rf {{ tl_dir }}/nginx/*
+      shell: rm -rf {{ tl_dir }}/nginx/*
+    - name: rm -rf {{ ap_dir }}/nginx/*
+      shell: rm -rf {{ ap_dir }}/nginx/*
+    - name: yum install -y openssl-devel pcre-devel
+      yum: name=openssl-devel state=installed
+    - name: yum install -y pcre-devel
+      yum: name=pcre-devel state=installed
+    - name: useradd www -s /sbin/nologin -M
+      user: name=www createhome=no shell=/sbin/nologin
+    - name: mkdir -p {{ tl_dir }}/nginx
+      file: name={{ tl_dir }}/nginx state=directory
+    - name: mkdir -p {{ ap_dir }}/nginx
+      file: name={{ ap_dir }}/nginx state=directory
+    - name: copy nginx package to 7
+      copy: src=/etc/ansible/conf/nginx/nginx-1.12.2.tar.gz dest={{ tl_dir }}/nginx
+    - name: tar -xf {{ tl_dir }}/nginx/nginx-1.12.2.tar.gz
+      shell: cd {{ tl_dir }}/nginx/;tar -xf nginx-1.12.2.tar.gz
+    - name: mv {{ tl_dir }}/nginx/nginx-1.12.2 {{ tl_dir }}/nginx/nginx
+      shell: cd {{ tl_dir }}/nginx;mv nginx-1.12.2 nginx
+    - name: compile nginx package
+      shell: cd {{ tl_dir }}/nginx/nginx;./configure --prefix={{ ap_dir }}/nginx/nginx --user=www --group=www --with-http_ssl_module --with-http_stub_status_module
+    - name: make&&make install
+      shell: cd {{ tl_dir }}/nginx/nginx;make&&make install
+    - name: scp /etc/ansible/conf/keepalived/nginx.conf /application/nginx/nginx/conf/nginx.conf
+      copy: src=/etc/ansible/conf/keepalived/nginx.conf dest=/application/nginx/nginx/conf/nginx.conf
+    - name: start nginx
+      shell: /application/nginx/nginx/sbin/nginx  
+- hosts: 172.16.1.5
+  tasks:
+    - name: copy keepalived.conf to 5
+      copy: src=/etc/ansible/conf/keepalived/keepalived-5.conf dest=/etc/keepalived/keepalived.conf
+    - name: restart keepalived
+      shell: /etc/init.d/keepalived restart
+- hosts: 172.16.1.6
+  tasks:
+    - name: copy keepalived.conf to 6
+      copy: src=/etc/ansible/conf/keepalived/keepalived-6.conf dest=/etc/keepalived/keepalived.conf
+    - name: restart keepalived
+      shell: /etc/init.d/keepalived restart
+
+

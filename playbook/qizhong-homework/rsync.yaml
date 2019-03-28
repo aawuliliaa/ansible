@@ -1,0 +1,18 @@
+- hosts: backup-server
+  tasks:
+    - name: step01:install rsync
+      yum: name=rsync state=installed
+    - name: step02:edit rsync conf file
+      copy: src=/etc/ansible/conf/rsync_conf/rsyncd.conf dest=/etc/
+    - name: step03:create rsync user
+      user: name=rsync state=present createhome=no shell=/sbin/nologin
+    - name: step04:create auth file
+      copy: src=/etc/ansible/conf/rsync_conf/rsync.password dest=/etc/ mode=600
+    - name: step05:create backup dir
+      file: dest=/backup state=directory owner=rsync group=rsync
+    - name: step06:star rsync server
+      shell: rsync --daemon creates:/var/run/rsyncd.pid
+- hosts: backup-client
+  tasks:
+    - name: step01:create auth file
+      copy: src=/etc/ansible/conf/rsync_conf/rsync_client.password dest=/etc/rsync.password mode=600

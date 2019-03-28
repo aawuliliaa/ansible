@@ -1,0 +1,50 @@
+- hosts: lb
+  tasks:
+    - name: copy nginx.conf
+      copy: src=/etc/ansible/conf/tomcat-session-share/nginx.conf dest=/application/nginx/nginx/conf/nginx.conf
+    - name: copy check_web.sh
+      copy: src=/etc/ansible/conf/keepalived/check_web.sh dest=/server/scripts/check_web.sh
+    - name: stop nginx
+      shell: /application/nginx/nginx/sbin/nginx -s stop
+    - name: start nginx
+      shell: /application/nginx/nginx/sbin/nginx 
+- hosts: 172.16.1.5
+  tasks:
+    - name: copy keepalived.conf to 5
+      copy: src=/etc/ansible/conf/tomcat-session-share/keepalived-5.conf dest=/etc/keepalived/keepalived.conf
+    - name: restart keepalived
+      shell: /etc/init.d/keepalived restart
+- hosts: 172.16.1.6
+  tasks:
+    - name: copy keepalived.conf to 6
+      copy: src=/etc/ansible/conf/tomcat-session-share/keepalived-6.conf dest=/etc/keepalived/keepalived.conf
+    - name: restart keepalived
+      shell: /etc/init.d/keepalived restart
+- hosts: tomcat
+  tasks:
+    - name: copy server.xml
+      copy: src=/etc/ansible/conf/tomcat-session-share/server.xml dest=/application/tomcat/tomcat/conf/
+    - name: copy jar package to application
+      copy: src=/etc/ansible/conf/tomcat-session-share/jar dest=/application/
+    - name: copy jar package to lib dir
+      shell: cp /application/jar/*.jar /application/tomcat/tomcat/lib
+- hosts: 172.16.1.7
+  tasks:
+    - name: copy index.jsp to web01
+      copy: src=/etc/ansible/conf/tomcat-session-share/web01/myapp dest=/application/tomcat/tomcat/webapps/
+- hosts: 172.16.1.8
+  tasks:
+    - name: copy index.jsp to web02
+      copy: src=/etc/ansible/conf/tomcat-session-share/web02/myapp dest=/application/tomcat/tomcat/webapps/
+- hosts: 172.16.1.9
+  tasks:
+    - name: copy index.jsp to web03
+      copy: src=/etc/ansible/conf/tomcat-session-share/web03/myapp dest=/application/tomcat/tomcat/webapps/
+- hosts: tomcat
+  tasks:
+    - name: stop tomcat
+      shell: sh /application/tomcat/tomcat/bin/shutdown.sh
+    - name: start tomcat
+      shell: chdir=/application/tomcat/tomcat/bin/ nohup ./catalina.sh start &
+
+

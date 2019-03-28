@@ -1,0 +1,36 @@
+- hosts: tomcat
+  vars:
+    tl_dir: /server/tools
+    ap_dir: /application
+    an_conf: /etc/ansible/conf
+  tasks:
+    - name: mkdir -p {{ tl_dir }}/tomcat
+      file: dest={{ tl_dir }}/tomcat state=directory
+    - name: mkdir -p {{ ap_dir }}/tomcat
+      file: dest={{ ap_dir }}/tomcat state=directory
+    - name: rm -rf {{ tl_dir }}/tomcat/*
+      shell: rm -rf {{ tl_dir }}/tomcat/*
+    - name: rm -rf {{ ap_dir }}/tomcat/*
+      shell: rm -rf {{ ap_dir }}/tomcat/*
+    - name: scp -r {{ an_conf }}/tomcat/apache-tomcat-7.0.93.zip root@10.0.0.7:{{ tl_dir }}/tomcat
+      copy: src={{ an_conf }}/tomcat/apache-tomcat-7.0.93.zip dest={{ tl_dir }}/tomcat
+    - name: scp -r {{ an_conf }}/tomcat/jdk-7u80-linux-x64.tar.gz root@10.0.0.7:{{ tl_dir }}/tomcat
+      copy: src={{ an_conf }}/tomcat/jdk-7u80-linux-x64.tar.gz dest={{ tl_dir }}/tomcat
+    - name: cd {{ tl_dir }}/tomcat;unzip apache-tomcat-7.0.93.zip
+      shell: cd {{ tl_dir }}/tomcat;unzip apache-tomcat-7.0.93.zip
+    - name: cd {{ tl_dir }}/tomcat;tar -xvf jdk-7u80-linux-x64.tar.gz
+      shell: cd {{ tl_dir }}/tomcat;tar -xvf jdk-7u80-linux-x64.tar.gz
+    - name: rm -rf {{ ap_dir }}/tomcat/*
+      shell: rm -rf {{ ap_dir }}/tomcat/*
+    - name: mv {{ tl_dir }}/tomcat/apache-tomcat-7.0.93 {{ ap_dir }}/tomcat/tomcat
+      shell: mv {{ tl_dir }}/tomcat/apache-tomcat-7.0.93 {{ ap_dir }}/tomcat/tomcat
+    - name: mv {{ tl_dir }}/tomcat/jdk1.7.0_80 {{ ap_dir }}/tomcat/
+      shell: mv {{ tl_dir }}/tomcat/jdk1.7.0_80 {{ ap_dir }}/tomcat/
+    - name: sh /server/scripts/tomcat/java_variable.sh
+      script: /server/scripts/tomcat/java_variable.sh
+    - name: source /etc/profile
+      shell: source /etc/profile
+    - name: cd {{ ap_dir }}/tomcat/tomcat/bin;chmod +x *
+      shell: cd {{ ap_dir }}/tomcat/tomcat/bin;chmod +x *
+    - name: chdir={{ ap_dir }}/tomcat/tomcat/bin/ nohup ./catalina.sh start &
+      shell: chdir={{ ap_dir }}/tomcat/tomcat/bin/ nohup ./catalina.sh start &

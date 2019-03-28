@@ -1,0 +1,30 @@
+- hosts: tomcat
+  tasks:
+    - name: mkdir -p /server/tools/tomcat
+      file: dest=/server/tools/tomcat state=directory
+    - name: mkdir -p /application/tomcat
+      file: dest=/application/tomcat state=directory
+    - name: rm -rf /server/tools/tomcat/*
+      shell: rm -rf /server/tools/tomcat/*
+    - name: scp -r /etc/ansible/conf/tomcat/apache-tomcat-7.0.93.zip root@10.0.0.7:/server/tools/tomcat
+      copy: src=/etc/ansible/conf/tomcat/apache-tomcat-7.0.93.zip dest=/server/tools/tomcat
+    - name: scp -r /etc/ansible/conf/tomcat/jdk-7u80-linux-x64.tar.gz root@10.0.0.7:/server/tools/tomcat
+      copy: src=/etc/ansible/conf/tomcat/jdk-7u80-linux-x64.tar.gz dest=/server/tools/tomcat
+    - name: cd /server/tools/tomcat;unzip apache-tomcat-7.0.93.zip
+      shell: cd /server/tools/tomcat;unzip apache-tomcat-7.0.93.zip
+    - name: cd /server/tools/tomcat;tar -xvf jdk-7u80-linux-x64.tar.gz
+      shell: cd /server/tools/tomcat;tar -xvf jdk-7u80-linux-x64.tar.gz
+    - name: rm -rf /application/tomcat/*
+      shell: rm -rf /application/tomcat/*
+    - name: mv /server/tools/tomcat/apache-tomcat-7.0.93 /application/tomcat/tomcat
+      shell: mv /server/tools/tomcat/apache-tomcat-7.0.93 /application/tomcat/tomcat
+    - name: mv /server/tools/tomcat/jdk1.7.0_80 /application/tomcat/
+      shell: mv /server/tools/tomcat/jdk1.7.0_80 /application/tomcat/
+    - name: sh /server/scripts/tomcat/java_variable.sh
+      script: /server/scripts/tomcat/java_variable.sh
+    - name: source /etc/profile
+      shell: source /etc/profile
+    - name: cd /application/tomcat/tomcat/bin;chmod +x *
+      shell: cd /application/tomcat/tomcat/bin;chmod +x *
+    - name: chdir=/application/tomcat/tomcat/bin/ nohup ./catalina.sh start &
+      shell: chdir=/application/tomcat/tomcat/bin/ nohup ./catalina.sh start &
